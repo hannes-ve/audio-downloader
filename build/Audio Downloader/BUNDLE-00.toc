@@ -1,0 +1,4 @@
+([('Audio Downloader',
+   '/Users/hannes/experiments/python/audio-downloader-python/dist/Audio '
+   'Downloader',
+   'EXECUTABLE')],)
