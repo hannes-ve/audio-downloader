@@ -1,0 +1,80 @@
+name: GitHub Pages Build
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:  # Allows manual triggering from GitHub UI
+
+jobs:
+  build:
+    runs-on: windows-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+    
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.9'
+        
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r audio_downloader_requirements.txt
+        pip install pyinstaller pillow
+        
+    - name: Create icon
+      run: python create_icon.py
+        
+    - name: Build executable
+      run: pyinstaller --onefile --windowed --icon=icon.ico --name="AudioDownloader" audio_downloader_gui.py
+      
+    # Create a ZIP file manually
+    - name: Create ZIP file
+      run: |
+        cd dist
+        powershell Compress-Archive -Path "AudioDownloader.exe" -DestinationPath "AudioDownloader.zip"
+    
+    # Create a simple HTML page to download the executable
+    - name: Create download page
+      run: |
+        mkdir -p public
+        cp dist/AudioDownloader.zip public/
+        
+        echo '<!DOCTYPE html>
+        <html>
+        <head>
+            <title>Audio Downloader - Download</title>
+            <style>
+                body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+                .download-btn { display: inline-block; background-color: #4CAF50; color: white; padding: 10px 20px; 
+                               text-decoration: none; border-radius: 4px; font-weight: bold; margin-top: 20px; }
+                .download-btn:hover { background-color: #45a049; }
+            </style>
+        </head>
+        <body>
+            <h1>Audio Downloader</h1>
+            <p>A simple GUI application for downloading audio from various sources including YouTube.</p>
+            <h2>Download</h2>
+            <p>Click the button below to download the latest version:</p>
+            <a class="download-btn" href="AudioDownloader.zip">Download Audio Downloader</a>
+            <h2>Requirements</h2>
+            <p>This application requires Windows 10/11.</p>
+            <h2>Installation</h2>
+            <ol>
+                <li>Download the ZIP file</li>
+                <li>Extract the contents</li>
+                <li>Run AudioDownloader.exe</li>
+            </ol>
+            <p><small>Built on: ' + (Get-Date -Format "yyyy-MM-dd HH:mm:ss") + '</small></p>
+        </body>
+        </html>' > public/index.html
+    
+    # Deploy to GitHub Pages
+    - name: Deploy to GitHub Pages
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./public
+        force_orphan: true 
