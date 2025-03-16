@@ -1,72 +1,36 @@
 #!/usr/bin/env python3
 import sys
 import os
+import threading
+import queue
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, 
                             QHBoxLayout, QLabel, QLineEdit, QPushButton, 
-                            QFileDialog, QMessageBox, QProgressBar)
-from PyQt5.QtCore import Qt, QThread, pyqtSignal
+                            QFileDialog, QMessageBox, QProgressBar, QTextEdit)
+from PyQt5.QtCore import Qt, QTimer, pyqtSignal, QObject
 import audio_downloader
 
-class DownloadThread(QThread):
-    """Thread for handling downloads without freezing the GUI"""
-    progress_signal = pyqtSignal(str)
-    finished_signal = pyqtSignal(str)
-    error_signal = pyqtSignal(str)
-    
-    def __init__(self, url, output_path):
-        super().__init__()
-        self.url = url
-        self.output_path = output_path
-        
-    def run(self):
-        try:
-            # Redirect stdout to capture progress messages
-            original_stdout = sys.stdout
-            
-            class StdoutRedirector:
-                def __init__(self, signal):
-                    self.signal = signal
-                    self.buffer = ""
-                
-                def write(self, text):
-                    self.buffer += text
-                    if '\n' in self.buffer:
-                        lines = self.buffer.split('\n')
-                        for line in lines[:-1]:
-                            self.signal.emit(line)
-                        self.buffer = lines[-1]
-                
-                def flush(self):
-                    if self.buffer:
-                        self.signal.emit(self.buffer)
-                        self.buffer = ""
-            
-            sys.stdout = StdoutRedirector(self.progress_signal)
-            
-            # Perform the download
-            result = audio_downloader.download_audio(self.url, self.output_path)
-            
-            # Restore stdout
-            sys.stdout = original_stdout
-            
-            if result:
-                self.finished_signal.emit(f"Download completed: {result}")
-            else:
-                self.finished_signal.emit("Download completed!")
-                
-        except Exception as e:
-            # Restore stdout in case of error
-            sys.stdout = sys.__stdout__
-            self.error_signal.emit(f"Error: {str(e)}")
+class DownloadSignals(QObject):
+    """Signal holder for download process"""
+    progress = pyqtSignal(str)
+    finished = pyqtSignal(str)
+    error = pyqtSignal(str)
 
 class AudioDownloaderApp(QMainWindow):
     def __init__(self):
         super().__init__()
+        self.download_thread = None
+        self.message_queue = queue.Queue()
+        self.signals = DownloadSignals()
         self.initUI()
+        
+        # Setup timer for checking messages from the thread
+        self.timer = QTimer(self)
+        self.timer.timeout.connect(self.check_messages)
+        self.timer.start(100)  # Check every 100ms
         
     def initUI(self):
         self.setWindowTitle('Audio Downloader')
-        self.setGeometry(300, 300, 600, 200)
+        self.setGeometry(300, 300, 600, 400)
         
         # Main widget and layout
         main_widget = QWidget()
@@ -92,8 +56,10 @@ class AudioDownloaderApp(QMainWindow):
         output_layout.addWidget(browse_button)
         main_layout.addLayout(output_layout)
         
-        # Progress display
-        self.progress_text = QLabel('Ready')
+        # Progress display - using a text edit for better log display
+        self.progress_text = QTextEdit()
+        self.progress_text.setReadOnly(True)
+        self.progress_text.setMinimumHeight(150)
         main_layout.addWidget(self.progress_text)
         
         # Download button
@@ -104,6 +70,11 @@ class AudioDownloaderApp(QMainWindow):
         # Set the main layout
         main_widget.setLayout(main_layout)
         self.setCentralWidget(main_widget)
+        
+        # Connect signals
+        self.signals.progress.connect(self.update_progress)
+        self.signals.finished.connect(self.download_finished)
+        self.signals.error.connect(self.download_error)
         
     def browse_location(self):
         options = QFileDialog.Options()
@@ -119,17 +90,64 @@ class AudioDownloaderApp(QMainWindow):
             self.output_path.setText(file_path)
     
     def update_progress(self, message):
-        self.progress_text.setText(message)
+        self.progress_text.append(message)
+        # Scroll to the bottom
+        scrollbar = self.progress_text.verticalScrollBar()
+        scrollbar.setValue(scrollbar.maximum())
     
     def download_finished(self, message):
-        self.progress_text.setText(message)
+        self.update_progress(message)
         self.download_button.setEnabled(True)
         QMessageBox.information(self, "Download Complete", message)
     
     def download_error(self, error_message):
-        self.progress_text.setText(error_message)
+        self.update_progress(f"ERROR: {error_message}")
         self.download_button.setEnabled(True)
         QMessageBox.critical(self, "Download Error", error_message)
+    
+    def check_messages(self):
+        """Check for messages from the download thread"""
+        try:
+            while True:
+                message_type, message = self.message_queue.get_nowait()
+                if message_type == "progress":
+                    self.signals.progress.emit(message)
+                elif message_type == "finished":
+                    self.signals.finished.emit(message)
+                elif message_type == "error":
+                    self.signals.error.emit(message)
+                self.message_queue.task_done()
+        except queue.Empty:
+            pass
+    
+    def download_worker(self, url, output_path):
+        """Worker function that runs in a separate thread"""
+        try:
+            # Custom print function to send messages to the main thread
+            def thread_print(message):
+                self.message_queue.put(("progress", message))
+            
+            # Store the original print function
+            original_print = print
+            
+            # Replace the global print function
+            import builtins
+            builtins.print = thread_print
+            
+            try:
+                # Perform the download
+                result = audio_downloader.download_audio(url, output_path)
+                
+                if result:
+                    self.message_queue.put(("finished", f"Download completed: {result}"))
+                else:
+                    self.message_queue.put(("finished", "Download completed!"))
+            finally:
+                # Restore the original print function
+                builtins.print = original_print
+                
+        except Exception as e:
+            self.message_queue.put(("error", str(e)))
     
     def start_download(self):
         url = self.url_input.text().strip()
@@ -139,18 +157,21 @@ class AudioDownloaderApp(QMainWindow):
             QMessageBox.warning(self, "Input Error", "Please enter a URL")
             return
         
-        # If no output path is specified, we'll let the downloader handle it
-        
         # Disable the download button during download
         self.download_button.setEnabled(False)
-        self.progress_text.setText("Starting download...")
+        self.update_progress("Starting download...")
         
-        # Start the download thread
-        self.download_thread = DownloadThread(url, output_path if output_path else None)
-        self.download_thread.progress_signal.connect(self.update_progress)
-        self.download_thread.finished_signal.connect(self.download_finished)
-        self.download_thread.error_signal.connect(self.download_error)
+        # Start the download in a separate thread
+        self.download_thread = threading.Thread(
+            target=self.download_worker,
+            args=(url, output_path if output_path else None)
+        )
+        self.download_thread.daemon = True  # Thread will exit when main thread exits
         self.download_thread.start()
+
+    def closeEvent(self, event):
+        # The daemon thread will be automatically terminated when the app closes
+        event.accept()
 
 def main():
     app = QApplication(sys.argv)
