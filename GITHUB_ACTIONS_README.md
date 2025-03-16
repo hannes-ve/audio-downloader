@@ -77,6 +77,16 @@ If the workflow fails:
 3. Make necessary changes to your code
 4. Push the changes to GitHub to trigger the workflow again
 
+### GitHub Actions Version Issues
+
+If you encounter errors related to GitHub Actions versions (like "Missing download info for actions/upload-artifact@v3"):
+
+1. Check the error message in the workflow run logs
+2. Update the version numbers in the `.github/workflows/build.yml` file
+   - We're currently using stable versions (v2) for all actions
+   - You might need to downgrade or upgrade certain actions if issues persist
+3. Commit and push the changes to try again
+
 ### Missing Dependencies
 
 If the build fails due to missing dependencies:
