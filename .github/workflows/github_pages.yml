@@ -40,9 +40,10 @@ jobs:
     - name: Create download page
       run: |
         mkdir -p public
-        cp dist/AudioDownloader.zip public/
+        copy dist\AudioDownloader.zip public\
         
-        echo '<!DOCTYPE html>
+        @"
+        <!DOCTYPE html>
         <html>
         <head>
             <title>Audio Downloader - Download</title>
@@ -67,9 +68,10 @@ jobs:
                 <li>Extract the contents</li>
                 <li>Run AudioDownloader.exe</li>
             </ol>
-            <p><small>Built on: ' + (Get-Date -Format "yyyy-MM-dd HH:mm:ss") + '</small></p>
+            <p><small>Built on: $(Get-Date -Format "yyyy-MM-dd HH:mm:ss")</small></p>
         </body>
-        </html>' > public/index.html
+        </html>
+        "@ | Out-File -FilePath public\index.html -Encoding utf8
     
     # Deploy to GitHub Pages
     - name: Deploy to GitHub Pages
