@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Audio Downloader - Download</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            max-width: 800px; 
+            margin: 0 auto; 
+            padding: 20px; 
+            line-height: 1.6;
+        }
+        .download-section {
+            background-color: #f5f5f5;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .download-btn { 
+            display: inline-block; 
+            background-color: #4CAF50; 
+            color: white; 
+            padding: 12px 24px; 
+            text-decoration: none; 
+            border-radius: 4px; 
+            font-weight: bold; 
+            margin-top: 20px;
+            transition: background-color 0.3s;
+        }
+        .download-btn:hover { 
+            background-color: #45a049; 
+        }
+        .direct-download-btn {
+            display: inline-block; 
+            background-color: #2196F3; 
+            color: white; 
+            padding: 12px 24px; 
+            text-decoration: none; 
+            border-radius: 4px; 
+            font-weight: bold; 
+            margin-top: 20px;
+            margin-left: 10px;
+            transition: background-color 0.3s;
+        }
+        .direct-download-btn:hover {
+            background-color: #0b7dda;
+        }
+        h1, h2 {
+            color: #333;
+        }
+        .github-link {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+    </style>
+</head>
+<body>
+    <h1>Audio Downloader</h1>
+    <p>A simple GUI application for downloading audio from various sources including YouTube.</p>
+    
+    <div class="download-section">
+        <h2>Download</h2>
+        <p>You can download the latest version of Audio Downloader:</p>
+        <a class="download-btn" href="https://github.com/hannes-ve/audio-downloader/actions" target="_blank">Go to GitHub Actions</a>
+        <a class="direct-download-btn" href="AudioDownloader.zip">Direct Download</a>
+        <p><small>Note: For GitHub Actions, go to the latest successful workflow run, scroll down to the "Artifacts" section, and download "AudioDownloader-Windows-ZIP".</small></p>
+    </div>
+    
+    <h2>Features</h2>
+    <ul>
+        <li>Download audio from YouTube videos</li>
+        <li>Download audio from direct URLs</li>
+        <li>Select custom save location</li>
+        <li>Real-time download progress updates</li>
+        <li>Support for multiple download methods (pytube, youtube-dl, yt-dlp)</li>
+    </ul>
+    
+    <h2>Requirements</h2>
+    <p>This application requires Windows 10/11.</p>
+    
+    <h2>Installation</h2>
+    <ol>
+        <li>Download the ZIP file using one of the download buttons above</li>
+        <li>Extract the contents</li>
+        <li>Run AudioDownloader.exe</li>
+    </ol>
+    
+    <div class="github-link">
+        <p>View the <a href="https://github.com/hannes-ve/audio-downloader" target="_blank">source code on GitHub</a></p>
+    </div>
+</body>
+</html> 
