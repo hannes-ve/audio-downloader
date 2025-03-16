@@ -36,42 +36,12 @@ jobs:
         cd dist
         powershell Compress-Archive -Path "AudioDownloader.exe" -DestinationPath "AudioDownloader.zip"
     
-    # Create a simple HTML page to download the executable
-    - name: Create download page
+    # Prepare the public directory with the existing index.html
+    - name: Prepare public directory
       run: |
         mkdir -p public
+        copy index.html public\
         copy dist\AudioDownloader.zip public\
-        
-        @"
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <title>Audio Downloader - Download</title>
-            <style>
-                body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
-                .download-btn { display: inline-block; background-color: #4CAF50; color: white; padding: 10px 20px; 
-                               text-decoration: none; border-radius: 4px; font-weight: bold; margin-top: 20px; }
-                .download-btn:hover { background-color: #45a049; }
-            </style>
-        </head>
-        <body>
-            <h1>Audio Downloader</h1>
-            <p>A simple GUI application for downloading audio from various sources including YouTube.</p>
-            <h2>Download</h2>
-            <p>Click the button below to download the latest version:</p>
-            <a class="download-btn" href="AudioDownloader.zip">Download Audio Downloader</a>
-            <h2>Requirements</h2>
-            <p>This application requires Windows 10/11.</p>
-            <h2>Installation</h2>
-            <ol>
-                <li>Download the ZIP file</li>
-                <li>Extract the contents</li>
-                <li>Run AudioDownloader.exe</li>
-            </ol>
-            <p><small>Built on: $(Get-Date -Format "yyyy-MM-dd HH:mm:ss")</small></p>
-        </body>
-        </html>
-        "@ | Out-File -FilePath public\index.html -Encoding utf8
     
     # Deploy to GitHub Pages
     - name: Deploy to GitHub Pages
