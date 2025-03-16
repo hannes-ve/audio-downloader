@@ -31,7 +31,7 @@ jobs:
       run: pyinstaller --onefile --windowed --icon=icon.ico --name="Audio Downloader" audio_downloader_gui.py
         
     - name: Upload executable
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@82c141cc518b40d92cc801eee768e7aafc9c2fa2 # v2.3.1
       with:
         name: Audio-Downloader-Windows
         path: dist/Audio Downloader.exe
@@ -42,7 +42,7 @@ jobs:
         powershell Compress-Archive -Path "Audio Downloader.exe" -DestinationPath "Audio-Downloader-Windows.zip"
         
     - name: Upload release ZIP
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@82c141cc518b40d92cc801eee768e7aafc9c2fa2 # v2.3.1
       with:
         name: Audio-Downloader-Windows-ZIP
         path: dist/Audio-Downloader-Windows.zip 
