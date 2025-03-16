@@ -28,21 +28,21 @@ jobs:
       run: python create_icon.py
         
     - name: Build executable
-      run: pyinstaller --onefile --windowed --icon=icon.ico --name="Audio Downloader" audio_downloader_gui.py
+      run: pyinstaller --onefile --windowed --icon=icon.ico --name="AudioDownloader" audio_downloader_gui.py
         
     - name: Upload executable
       uses: actions/upload-artifact@v1.0.0
       with:
-        name: Audio-Downloader-Windows
-        path: dist/Audio Downloader.exe
+        name: AudioDownloader-Windows
+        path: dist/AudioDownloader.exe
         
     - name: Create release ZIP
       run: |
         cd dist
-        powershell Compress-Archive -Path "Audio Downloader.exe" -DestinationPath "Audio-Downloader-Windows.zip"
+        powershell Compress-Archive -Path "AudioDownloader.exe" -DestinationPath "AudioDownloader-Windows.zip"
         
     - name: Upload release ZIP
       uses: actions/upload-artifact@v1.0.0
       with:
-        name: Audio-Downloader-Windows-ZIP
-        path: dist/Audio-Downloader-Windows.zip 
+        name: AudioDownloader-Windows-ZIP
+        path: dist/AudioDownloader-Windows.zip 

@@ -28,17 +28,18 @@ jobs:
       run: python create_icon.py
         
     - name: Build executable
-      run: pyinstaller --onefile --windowed --icon=icon.ico --name="Audio Downloader" audio_downloader_gui.py
+      run: pyinstaller --onefile --windowed --icon=icon.ico --name="AudioDownloader" audio_downloader_gui.py
       
     - name: Create release ZIP
       run: |
         cd dist
-        powershell Compress-Archive -Path "Audio Downloader.exe" -DestinationPath "Audio-Downloader-Windows.zip"
+        powershell Compress-Archive -Path "AudioDownloader.exe" -DestinationPath "AudioDownloader-Windows.zip"
     
     # Use a third-party action to upload artifacts
-    - name: Upload artifacts
+    - name: Setup artifact client
       uses: lhotari/gh-actions-artifact-client@v2
-      with:
-        action: upload
-        artifact-name: Audio-Downloader-Windows
-        path: dist/Audio-Downloader-Windows.zip 
+      
+    - name: Upload artifact
+      run: |
+        cd dist
+        cat AudioDownloader-Windows.zip | gh-actions-artifact-client.js upload AudioDownloader-Windows 

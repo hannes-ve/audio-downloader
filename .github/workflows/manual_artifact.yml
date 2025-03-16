@@ -1,0 +1,72 @@
+name: Manual Artifact Upload
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:  # Allows manual triggering from GitHub UI
+
+jobs:
+  build:
+    runs-on: windows-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+    
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.9'
+        
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r audio_downloader_requirements.txt
+        pip install pyinstaller pillow
+        
+    - name: Create icon
+      run: python create_icon.py
+        
+    - name: Build executable
+      run: pyinstaller --onefile --windowed --icon=icon.ico --name="AudioDownloader" audio_downloader_gui.py
+      
+    - name: Create release ZIP
+      run: |
+        cd dist
+        powershell Compress-Archive -Path "AudioDownloader.exe" -DestinationPath "AudioDownloader-Windows.zip"
+    
+    # Manual approach to upload artifacts using GitHub REST API
+    - name: Upload artifact using GitHub API
+      shell: pwsh
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        $artifactName = "AudioDownloader-Windows"
+        $artifactPath = "dist/AudioDownloader-Windows.zip"
+        
+        # Create a temporary directory for the artifact
+        $tempDir = Join-Path $env:RUNNER_TEMP $artifactName
+        New-Item -ItemType Directory -Path $tempDir -Force | Out-Null
+        
+        # Copy the artifact to the temporary directory
+        Copy-Item $artifactPath $tempDir
+        
+        # Create a zip file of the artifact
+        $zipPath = Join-Path $env:RUNNER_TEMP "$artifactName.zip"
+        Compress-Archive -Path "$tempDir/*" -DestinationPath $zipPath -Force
+        
+        # Get the workflow run ID
+        $runId = $env:GITHUB_RUN_ID
+        
+        # Upload the artifact using the GitHub API
+        $headers = @{
+            "Authorization" = "Bearer $env:GITHUB_TOKEN"
+            "Accept" = "application/vnd.github.v3+json"
+        }
+        
+        $uri = "https://api.github.com/repos/$env:GITHUB_REPOSITORY/actions/runs/$runId/artifacts"
+        
+        Write-Host "Uploading artifact to $uri"
+        Invoke-RestMethod -Uri $uri -Method POST -Headers $headers -InFile $zipPath -ContentType "application/zip"
+        
+        Write-Host "Artifact uploaded successfully" 

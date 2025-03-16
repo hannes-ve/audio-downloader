@@ -28,12 +28,12 @@ jobs:
       run: python create_icon.py
         
     - name: Build executable
-      run: pyinstaller --onefile --windowed --icon=icon.ico --name="Audio Downloader" audio_downloader_gui.py
+      run: pyinstaller --onefile --windowed --icon=icon.ico --name="AudioDownloader" audio_downloader_gui.py
       
     - name: Create release ZIP
       run: |
         cd dist
-        powershell Compress-Archive -Path "Audio Downloader.exe" -DestinationPath "Audio-Downloader-Windows.zip"
+        powershell Compress-Archive -Path "AudioDownloader.exe" -DestinationPath "AudioDownloader-Windows.zip"
     
     # Instead of using upload-artifact, we'll create a release
     - name: Create Release
@@ -54,6 +54,6 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./dist/Audio-Downloader-Windows.zip
-        asset_name: Audio-Downloader-Windows.zip
+        asset_path: ./dist/AudioDownloader-Windows.zip
+        asset_name: AudioDownloader-Windows.zip
         asset_content_type: application/zip 

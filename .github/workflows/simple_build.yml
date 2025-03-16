@@ -28,15 +28,15 @@ jobs:
       run: python create_icon.py
         
     - name: Build executable
-      run: pyinstaller --onefile --windowed --icon=icon.ico --name="Audio Downloader" audio_downloader_gui.py
+      run: pyinstaller --onefile --windowed --icon=icon.ico --name="AudioDownloader" audio_downloader_gui.py
       
     - name: Create release ZIP
       run: |
         cd dist
-        powershell Compress-Archive -Path "Audio Downloader.exe" -DestinationPath "Audio-Downloader-Windows.zip"
+        powershell Compress-Archive -Path "AudioDownloader.exe" -DestinationPath "AudioDownloader-Windows.zip"
         
     - name: Upload build artifacts
       uses: actions/upload-artifact@v1.0.0
       with:
-        name: Audio-Downloader-Windows
+        name: AudioDownloader-Windows
         path: ${{ github.workspace }}/dist 
