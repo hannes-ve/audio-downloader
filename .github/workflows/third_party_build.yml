@@ -1,4 +1,4 @@
-name: Simple Windows Executable Build
+name: Third-Party Windows Executable Build
 
 on:
   push:
@@ -34,9 +34,11 @@ jobs:
       run: |
         cd dist
         powershell Compress-Archive -Path "Audio Downloader.exe" -DestinationPath "Audio-Downloader-Windows.zip"
-        
-    - name: Upload build artifacts
-      uses: actions/upload-artifact@v1.0.0
+    
+    # Use a third-party action to upload artifacts
+    - name: Upload artifacts
+      uses: lhotari/gh-actions-artifact-client@v2
       with:
-        name: Audio-Downloader-Windows
-        path: ${{ github.workspace }}/dist 
+        action: upload
+        artifact-name: Audio-Downloader-Windows
+        path: dist/Audio-Downloader-Windows.zip 

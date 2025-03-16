@@ -1,4 +1,4 @@
-name: Simple Windows Executable Build
+name: Alternative Windows Executable Build
 
 on:
   push:
@@ -34,9 +34,26 @@ jobs:
       run: |
         cd dist
         powershell Compress-Archive -Path "Audio Downloader.exe" -DestinationPath "Audio-Downloader-Windows.zip"
-        
-    - name: Upload build artifacts
-      uses: actions/upload-artifact@v1.0.0
+    
+    # Instead of using upload-artifact, we'll create a release
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        name: Audio-Downloader-Windows
-        path: ${{ github.workspace }}/dist 
+        tag_name: v${{ github.run_number }}
+        release_name: Release v${{ github.run_number }}
+        draft: false
+        prerelease: false
+    
+    # Upload the executable as a release asset
+    - name: Upload Release Asset
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./dist/Audio-Downloader-Windows.zip
+        asset_name: Audio-Downloader-Windows.zip
+        asset_content_type: application/zip 
