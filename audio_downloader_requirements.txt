@@ -1,0 +1,5 @@
+PyQt5==5.15.9
+requests==2.31.0
+pytube==15.0.0
+yt-dlp==2023.11.16
+pyinstaller==6.0.0
